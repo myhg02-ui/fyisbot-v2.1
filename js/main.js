@@ -1,27 +1,20 @@
 ﻿function goToPanel() {
-    const email = document.getElementById('email').value;
-
-    if (!email || !validateEmail(email)) {
-        alert('Por favor ingresa un correo válido');
+    const email = document.getElementById('email').value.trim();
+    
+    if (!email) {
+        alert('Ingresa tu correo electrónico');
         return;
     }
-
-    sessionStorage.setItem('userEmail', email);
-    // Funciona tanto en Vercel (sin .html) como en local (con .html)
-    window.location.href = window.location.hostname === 'localhost' ? 'panel.html' : '/panel';
-}
-
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const emailInput = document.getElementById('email');
-    if (emailInput) {
-        emailInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                goToPanel();
-            }
-        });
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Ingresa un correo válido');
+        return;
     }
+    
+    sessionStorage.setItem('userEmail', email);
+    window.location.href = window.location.hostname.includes('localhost') ? 'panel.html' : '/panel';
+}
+
+document.getElementById('email')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') goToPanel();
 });
