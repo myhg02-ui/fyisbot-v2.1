@@ -1,13 +1,14 @@
 ﻿function goToPanel() {
     const email = document.getElementById('email').value;
-    
+
     if (!email || !validateEmail(email)) {
-        alert('Por favor ingresa un correo valido');
+        alert('Por favor ingresa un correo válido');
         return;
     }
-    
+
     sessionStorage.setItem('userEmail', email);
-    window.location.href = '/panel';
+    // Funciona tanto en Vercel (sin .html) como en local (con .html)
+    window.location.href = window.location.hostname === 'localhost' ? 'panel.html' : '/panel';
 }
 
 function validateEmail(email) {
