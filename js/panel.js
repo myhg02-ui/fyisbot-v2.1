@@ -1,3 +1,17 @@
+﻿// Auto-iniciar verificacion al cargar
+window.addEventListener('DOMContentLoaded', function() {
+    // Ocultar tutorial y mostrar panel automaticamente
+    const tutorialSection = document.getElementById('tutorialSection');
+    const panelSection = document.getElementById('panelSection');
+    
+    if (tutorialSection) tutorialSection.style.display = 'none';
+    if (panelSection) panelSection.style.display = 'block';
+    
+    // Iniciar verificacion automatica
+    setTimeout(() => {
+        checkEmails();
+    }, 500);
+});
 // Panel JavaScript - Lógica Simplificada
 
 // Tutorial Device Selection
