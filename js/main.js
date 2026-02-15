@@ -1,41 +1,21 @@
-// main.js - Página de inicio
-
-function goToPanel() {
-    const emailInput = document.getElementById('email');
-    const email = emailInput.value.trim();
+﻿function goToPanel() {
+    const email = document.getElementById(''email'').value;
     
-    if (!email) {
-        alert('⚠️ Por favor ingresa tu correo de Netflix');
-        emailInput.focus();
+    if (!email || !validateEmail(email)) {
+        alert(''Por favor ingresa un correo valido'');
         return;
     }
     
-    if (!validateEmail(email)) {
-        alert('⚠️ Por favor ingresa un correo válido');
-        emailInput.focus();
-        return;
-    }
-    
-    // Guardar email en localStorage
-    localStorage.setItem('netflixEmail', email);
-    
-    // Redirigir al panel
-    window.location.href = 'panel.html';
+    sessionStorage.setItem(''userEmail'', email);
+    window.location.href = ''/panel.html'';
 }
 
 function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Permitir enviar con Enter
-document.addEventListener('DOMContentLoaded', () => {
-    const emailInput = document.getElementById('email');
-    if (emailInput) {
-        emailInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                goToPanel();
-            }
-        });
+document.getElementById(''email'').addEventListener(''keypress'', function(e) {
+    if (e.key === ''Enter'') {
+        goToPanel();
     }
 });
