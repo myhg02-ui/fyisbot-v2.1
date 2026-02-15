@@ -7,7 +7,7 @@
     }
     
     sessionStorage.setItem('userEmail', email);
-    window.location.href = '/panel.html';
+    window.location.href = '/panel';
 }
 
 function validateEmail(email) {
