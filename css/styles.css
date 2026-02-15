@@ -163,6 +163,21 @@ footer p {
     margin: 0.3rem 0;
 }
 
+/* Version indicator */
+.version-tag {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(229, 9, 20, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 9999;
+    letter-spacing: 1px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .netflix-logo {
@@ -175,5 +190,10 @@ footer p {
     
     h1 {
         font-size: 1.5rem;
+    }
+    
+    .version-tag {
+        font-size: 0.65rem;
+        padding: 4px 8px;
     }
 }
