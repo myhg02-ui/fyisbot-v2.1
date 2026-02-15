@@ -14,6 +14,14 @@ YANDEX_PASSWORD = 'dccvunwyiszhvvim'
 IMAP_SERVER = 'imap.yandex.com'
 IMAP_PORT = 993
 
+# Asuntos exactos de Netflix a filtrar
+FILTER_SUBJECTS = [
+    'Importante: Como actualizar tu Hogar con Netflix',
+    'Tu codigo de acceso temporal de Netflix',
+    'Importante: Como cambiar tu hogar Netflix',
+    'Netflix: Tu codigo de inicio de sesion'
+]
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
@@ -46,9 +54,8 @@ class handler(BaseHTTPRequestHandler):
                     if isinstance(subject, bytes):
                         subject = subject.decode(subject_header[1] or 'utf-8')
                     
-                    # Filtrar solo correos de Netflix
-                    netflix_keywords = ['netflix', 'codigo', 'hogar', 'inicio de sesion']
-                    if not any(kw in subject.lower() for kw in netflix_keywords):
+                    # Filtrar solo asuntos especificos de Netflix
+                    if not any(filtro.lower() in subject.lower() for filtro in FILTER_SUBJECTS):
                         continue
                     
                     # Obtener fecha
@@ -66,17 +73,11 @@ class handler(BaseHTTPRequestHandler):
                     # Obtener contenido
                     content = self.get_content(msg)
                     
-                    # Extraer codigo de 4 digitos
-                    code = None
-                    code_match = re.search(r'\b(\d{4})\b', content)
-                    if code_match:
-                        code = code_match.group(1)
+                    # Extraer codigo de 4 digitos con patrones del bot original
+                    code = self.extract_code(content)
                     
-                    # Extraer link
-                    link = None
-                    link_match = re.search(r'(https://www\.netflix\.com/[^\s<>"]+)', content)
-                    if link_match:
-                        link = link_match.group(1)
+                    # Extraer link con patrones del bot original
+                    link = self.extract_link(content)
                     
                     codes_list.append({
                         'subject': subject,
@@ -134,3 +135,35 @@ class handler(BaseHTTPRequestHandler):
             except:
                 pass
         return ""
+    
+    def extract_code(self, text):
+        """Extraer codigo de 4 digitos - Patrones del bot original"""
+        patterns = [
+            r'codigo.*?(\d{4})',
+            r'code.*?(\d{4})',
+            r'(?:^|\s)(\d{4})(?:\s|$)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1)
+        return None
+    
+    def extract_link(self, text):
+        """Extraer enlaces - Patrones del bot original"""
+        patterns = [
+            r'Si, la envie yo.*?(https?://[^\s]+)',
+            r'Obtener codigo.*?(https?://[^\s]+)',
+            r'Solicitar codigo.*?(https?://[^\s]+)',
+            r'Si, lo solicite yo.*?(https?://[^\s]+)',
+            r'(https://www\.netflix\.com/account/[^\s]+)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                link = match.group(1)
+                link = link.strip('>,;')
+                return link
+        return None
