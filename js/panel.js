@@ -1,295 +1,219 @@
-// panel.js - Funcionalidad del panel
+// Panel JavaScript - Lógica Simplificada
 
-let currentEmail = '';
-let fetchTimeout = null;
-let timerInterval = null;
-
-// Inicialización
-document.addEventListener('DOMContentLoaded', () => {
-    // Obtener email del localStorage
-    currentEmail = localStorage.getItem('netflixEmail');
-    
-    if (!currentEmail) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    // Mostrar email en el header
-    document.getElementById('userEmail').textContent = currentEmail;
+// Tutorial Device Selection
+document.querySelectorAll('.device-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const device = this.dataset.device;
+        
+        document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        document.querySelectorAll('.tutorial-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        const tutorialContent = document.getElementById(`tutorial-${device}`);
+        if (tutorialContent) {
+            tutorialContent.classList.add('active');
+            setTimeout(() => {
+                tutorialContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    });
 });
 
-// Cambiar entre tabs
-function switchTab(tabName) {
-    // Actualizar botones de tab
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.getElementById('tab-' + tabName).classList.add('active');
+// Start verification - Oculta tutorial, muestra panel
+function startVerification() {
+    document.getElementById('tutorialSection').style.display = 'none';
+    document.getElementById('panelSection').style.display = 'block';
     
-    // Actualizar contenido
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.getElementById('content-' + tabName).classList.add('active');
+    setTimeout(() => {
+        document.getElementById('panelSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    
+    // Auto-verificar
+    setTimeout(() => {
+        checkEmails();
+    }, 500);
 }
 
-// Reiniciar panel
-function resetPanel() {
-    localStorage.removeItem('netflixEmail');
-    window.location.href = 'index.html';
+// Back to tutorial
+function backToTutorial() {
+    document.getElementById('panelSection').style.display = 'none';
+    document.getElementById('tutorialSection').style.display = 'block';
+    
+    setTimeout(() => {
+        document.getElementById('tutorialSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    
+    stopAutoRefresh();
+    hideAll();
 }
 
-// Buscar códigos (Modo Rápido)
-async function fetchCodes() {
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const codesContainer = document.getElementById('codesContainer');
-    
-    // Mostrar loading
-    loadingSpinner.style.display = 'flex';
-    codesContainer.innerHTML = '';
-    
-    // Iniciar timer de 10 segundos
-    let timeLeft = 10;
-    const timerElement = document.getElementById('timer');
-    
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        timerElement.textContent = timeLeft + 's';
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-        }
-    }, 1000);
+// Email checking functionality
+const API_URL = '/api/check_emails';
+let autoRefreshInterval;
+
+const checkBtn = document.getElementById('checkBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+const retryBtn = document.getElementById('retryBtn');
+const loading = document.getElementById('loading');
+const resultsContainer = document.getElementById('resultsContainer');
+const noResults = document.getElementById('noResults');
+const errorContainer = document.getElementById('errorContainer');
+const emailsList = document.getElementById('emailsList');
+const emailCount = document.getElementById('emailCount');
+const lastCheck = document.getElementById('lastCheck');
+const errorMessage = document.getElementById('errorMessage');
+
+async function checkEmails() {
+    showLoading();
     
     try {
-        // Llamar a la API
-        const response = await fetch('/api/check_emails.py?email=' + encodeURIComponent(currentEmail));
+        const response = await fetch(API_URL);
         const data = await response.json();
         
-        clearInterval(timerInterval);
-        loadingSpinner.style.display = 'none';
+        updateLastCheck();
         
-        if (data.success && data.codes && data.codes.length > 0) {
-            displayCodes(data.codes);
-            updateLastUpdate();
-        } else {
-            showNoCodesMessage();
+        if (data.error) {
+            showError(data.error);
+            return;
         }
+        
+        if (data.count === 0) {
+            showNoResults();
+            return;
+        }
+        
+        showResults(data.emails, data.count);
+        startAutoRefresh();
+        
     } catch (error) {
-        clearInterval(timerInterval);
-        loadingSpinner.style.display = 'none';
-        showErrorMessage(error.message);
+        console.error('Error:', error);
+        showError('No se pudo conectar al servidor. Intenta nuevamente.');
     }
 }
 
-function displayCodes(codes) {
-    const codesContainer = document.getElementById('codesContainer');
-    codesContainer.innerHTML = '';
+function showLoading() {
+    hideAll();
+    loading.style.display = 'block';
+}
+
+function showResults(emails, count) {
+    hideAll();
     
-    codes.forEach(code => {
-        const codeCard = document.createElement('div');
-        codeCard.className = 'code-card';
-        
-        let content = `
-            <h3>${code.subject}</h3>
-            <p><strong>Para:</strong> ${code.to}</p>
-            <p><strong>Recibido:</strong> ${code.date}</p>
-        `;
-        
-        if (code.code) {
-            content += `<div class="code-value">${code.code}</div>`;
-        }
-        
-        if (code.link) {
-            content += `<a href="${code.link}" class="code-link" target="_blank">🔗 Abrir enlace de verificación</a>`;
-        }
-        
-        codeCard.innerHTML = content;
-        codesContainer.appendChild(codeCard);
+    emailCount.textContent = count;
+    emailsList.innerHTML = '';
+    
+    emails.forEach((email, index) => {
+        const emailCard = createEmailCard(email, index);
+        emailsList.appendChild(emailCard);
     });
+    
+    resultsContainer.style.display = 'block';
 }
 
-function showNoCodesMessage() {
-    const codesContainer = document.getElementById('codesContainer');
-    codesContainer.innerHTML = `
-        <div class="code-card" style="text-align: center; border-left-color: var(--netflix-yellow);">
-            <h3>📭 No se encontraron códigos recientes</h3>
-            <p>No hay correos de Netflix de los últimos 15 minutos.</p>
-            <p style="margin-top: 15px;">💡 <strong>Sugerencias:</strong></p>
-            <ul style="text-align: left; margin-top: 10px; color: var(--netflix-light-gray);">
-                <li>Verifica que solicitaste el código desde Netflix</li>
-                <li>El correo puede tardar unos segundos en llegar</li>
-                <li>Asegúrate de usar el correo correcto: <strong>${currentEmail}</strong></li>
-                <li>Prueba el <strong>Modo Guiado</strong> para instrucciones paso a paso</li>
-            </ul>
+function createEmailCard(email, index) {
+    const card = document.createElement('div');
+    card.className = 'email-card';
+    card.style.animation = `slideIn 0.4s ease ${index * 0.1}s both`;
+    
+    const date = formatDate(email.date);
+    
+    card.innerHTML = `
+        <div class="email-header">
+            <div class="email-info">
+                <div class="email-subject">📌 ${email.subject || 'Nuevo correo de Netflix'}</div>
+            </div>
+            ${email.has_link ? '<span class="email-badge">✅ Enlace activo</span>' : ''}
         </div>
-    `;
-}
-
-function showErrorMessage(message) {
-    const codesContainer = document.getElementById('codesContainer');
-    codesContainer.innerHTML = `
-        <div class="code-card" style="text-align: center; border-left-color: #ff4444;">
-            <h3>❌ Error al buscar códigos</h3>
-            <p>${message}</p>
-            <p style="margin-top: 15px;">Por favor, intenta nuevamente o contacta al soporte.</p>
+        <div class="email-meta">
+            <span>📧 "${email.to}"</span>
+            <span>📅 ${date}</span>
         </div>
+        ${email.has_link ? `
+            <p style="color: #b3b3b3; font-size: 0.9rem; margin: 0.75rem 0;">
+                👉 Verifica tu acceso con el siguiente link 👇
+            </p>
+            <a href="${email.link}" target="_blank" class="email-link">
+                🔗 Verificar Acceso Netflix
+            </a>
+            <p style="color: #e50914; font-size: 0.85rem; margin-top: 0.75rem; font-weight: 600;">
+                ⚠️ Importante: Este enlace vence en 15 minutos
+            </p>
+        ` : '<p style="color: #999;">⚠️ Este correo no contiene enlace de verificación</p>'}
     `;
+    
+    return card;
 }
 
-function updateLastUpdate() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
-    document.getElementById('lastUpdate').textContent = `Última actualización: ${timeString}`;
-}
-
-function cancelFetch() {
-    clearInterval(timerInterval);
-    document.getElementById('loadingSpinner').style.display = 'none';
-}
-
-// Modo Guiado
-function showGuidedStep(stepType) {
-    const guidedSteps = document.getElementById('guidedSteps');
-    const optionsContainer = document.querySelector('.options-container');
-    
-    optionsContainer.style.display = 'none';
-    guidedSteps.style.display = 'block';
-    
-    let content = '';
-    
-    switch(stepType) {
-        case 'codigo-email':
-            content = `
-                <div class="step">
-                    <h3>📺 Paso 1: Solicitar el código</h3>
-                    <p>En la pantalla de tu TV verás un mensaje que dice <strong>"Ingresa el código que enviamos a tu email"</strong> con 4 cajas vacías.</p>
-                    <p>Debajo de ese mensaje, presiona el botón <strong>"Enviar email"</strong> o <strong>"Solicitar código"</strong>.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>📧 Paso 2: Espera unos segundos</h3>
-                    <p>Netflix enviará un correo a: <strong>${currentEmail}</strong></p>
-                    <p>El correo puede tardar entre 5-30 segundos en llegar.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>🔍 Paso 3: Ver tu código aquí</h3>
-                    <p>Cambia a la pestaña <strong>"Modo Rápido"</strong> y presiona <strong>"Actualizar códigos"</strong>.</p>
-                    <p>Verás tu código de 4 dígitos que debes ingresar en tu TV.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>⏰ Importante</h3>
-                    <p>El código expira en <strong>15 minutos</strong>. Si pasa ese tiempo, deberás solicitar uno nuevo.</p>
-                </div>
-                
-                <button class="btn-primary" onclick="switchToQuickMode()">🚀 Ir a Modo Rápido</button>
-                <button class="btn-secondary" onclick="backToOptions()">← Volver</button>
-            `;
-            break;
-            
-        case 'tv-hogar':
-            content = `
-                <div class="step">
-                    <h3>🏠 Paso 1: Selecciona una opción</h3>
-                    <p>En tu TV verás dos opciones:</p>
-                    <ul>
-                        <li><strong>"Actualizar hogar Netflix"</strong> - Si esta es tu casa principal</li>
-                        <li><strong>"Estoy de viaje"</strong> - Si estás temporalmente fuera de casa (recomendado)</li>
-                    </ul>
-                    <p>Selecciona la opción que prefieras.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>📧 Paso 2: Enviar email</h3>
-                    <p>Después de seleccionar, presiona <strong>"Enviar email"</strong>.</p>
-                    <p>Netflix enviará un enlace a: <strong>${currentEmail}</strong></p>
-                </div>
-                
-                <div class="step">
-                    <h3>🔗 Paso 3: Obtener el enlace</h3>
-                    <p>Ve al <strong>Modo Rápido</strong> y presiona <strong>"Actualizar códigos"</strong>.</p>
-                    <p>Verás un enlace que debes abrir para confirmar.</p>
-                </div>
-                
-                <button class="btn-primary" onclick="switchToQuickMode()">🚀 Ir a Modo Rápido</button>
-                <button class="btn-secondary" onclick="backToOptions()">← Volver</button>
-            `;
-            break;
-            
-        case 'dispositivo-hogar':
-            content = `
-                <div class="step">
-                    <h3>📱 Paso 1: Seleccionar "Ver temporalmente"</h3>
-                    <p>En tu dispositivo móvil u otro dispositivo, verás el mensaje:</p>
-                    <p><strong>"Tu dispositivo no forma parte del Hogar con Netflix"</strong></p>
-                    <p>Presiona el botón <strong>"Ver temporalmente"</strong>.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>📧 Paso 2: Solicitar código</h3>
-                    <p>Te pedirá que solicites un código de verificación.</p>
-                    <p>Presiona <strong>"Enviar email"</strong> o <strong>"Solicitar código"</strong>.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>🔢 Paso 3: Ingresar el código</h3>
-                    <p>El sistema te mostrará un código de 4 dígitos aquí en el <strong>Modo Rápido</strong>.</p>
-                    <p>Ingresa ese código en tu dispositivo.</p>
-                </div>
-                
-                <button class="btn-primary" onclick="switchToQuickMode()">🚀 Ir a Modo Rápido</button>
-                <button class="btn-secondary" onclick="backToOptions()">← Volver</button>
-            `;
-            break;
-            
-        case 'sin-mensaje':
-            content = `
-                <div class="step">
-                    <h3>❓ Ayuda General</h3>
-                    <p>Si no ves ningún mensaje específico en tu dispositivo, sigue estos pasos:</p>
-                </div>
-                
-                <div class="step">
-                    <h3>1️⃣ Verifica tu cuenta</h3>
-                    <p>Asegúrate de estar usando el correo correcto: <strong>${currentEmail}</strong></p>
-                    <p>Si no es el correcto, presiona <strong>"Reiniciar"</strong> arriba.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>2️⃣ Revisa tu conexión</h3>
-                    <p>Verifica que tu dispositivo esté conectado a internet.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>3️⃣ Reinicia Netflix</h3>
-                    <p>Cierra completamente la app de Netflix y vuelve a abrirla.</p>
-                </div>
-                
-                <div class="step">
-                    <h3>4️⃣ Contacta soporte</h3>
-                    <p>Si el problema persiste:</p>
-                    <p>WhatsApp: <strong>+51 942 354 613</strong></p>
-                    <p>Telegram: <strong>@Fyis2</strong></p>
-                </div>
-                
-                <button class="btn-secondary" onclick="backToOptions()">← Volver</button>
-            `;
-            break;
+function formatDate(dateString) {
+    if (typeof dateString === 'string' && dateString.includes('/')) {
+        return dateString + ' 🇵🇪';
     }
     
-    guidedSteps.innerHTML = content;
-}
-
-function switchToQuickMode() {
-    switchTab('rapido');
-    window.scrollTo(0, 0);
-}
-
-function backToOptions() {
-    const guidedSteps = document.getElementById('guidedSteps');
-    const optionsContainer = document.querySelector('.options-container');
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
     
-    guidedSteps.style.display = 'none';
-    optionsContainer.style.display = 'grid';
+    return `${day}/${month}/${year} ${hours}:${minutes} 🇵🇪`;
 }
+
+function showNoResults() {
+    hideAll();
+    noResults.style.display = 'block';
+}
+
+function showError(message) {
+    hideAll();
+    errorMessage.textContent = message;
+    errorContainer.style.display = 'block';
+    stopAutoRefresh();
+}
+
+function hideAll() {
+    loading.style.display = 'none';
+    resultsContainer.style.display = 'none';
+    noResults.style.display = 'none';
+    errorContainer.style.display = 'none';
+}
+
+function updateLastCheck() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    lastCheck.textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshInterval = setInterval(() => {
+        checkEmails();
+    }, 30000);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+}
+
+checkBtn.addEventListener('click', checkEmails);
+refreshBtn.addEventListener('click', checkEmails);
+retryBtn.addEventListener('click', checkEmails);
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopAutoRefresh();
+    } else {
+        if (resultsContainer.style.display === 'block') {
+            startAutoRefresh();
+        }
+    }
+});
+
+console.log('🎬 FyisBot Panel Netflix v2.0 - Lógica Simplificada');
