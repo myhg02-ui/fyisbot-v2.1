@@ -1,20 +1,136 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import imaplib
+import email
+from email.header import decode_header
+from email.utils import parsedate_to_datetime
+from datetime import timedelta, datetime
+import re
+from urllib.parse import parse_qs, urlparse
+
+# Credenciales Yandex
+YANDEX_USER = 'netflixmyhg@yandex.com'
+YANDEX_PASSWORD = 'dccvunwyiszhvvim'
+IMAP_SERVER = 'imap.yandex.com'
+IMAP_PORT = 993
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
-        # Respuesta de prueba
-        response = {
-            'success': True,
-            'codes': [],
-            'count': 0,
-            'message': 'API funcionando correctamente'
-        }
-        
-        self.wfile.write(json.dumps(response).encode())
-        return
+        try:
+            # Obtener email del query
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            user_email = params.get('email', [''])[0]
+            
+            # Conectar a Yandex
+            mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+            mail.login(YANDEX_USER, YANDEX_PASSWORD)
+            mail.select("inbox")
+            
+            # Buscar ultimos correos
+            status, messages = mail.search(None, 'ALL')
+            email_ids = messages[0].split()
+            last_10 = email_ids[-10:] if len(email_ids) >= 10 else email_ids
+            
+            codes_list = []
+            now = datetime.now()
+            
+            for eid in reversed(last_10):
+                try:
+                    status, data = mail.fetch(eid, '(RFC822)')
+                    msg = email.message_from_bytes(data[0][1])
+                    
+                    # Obtener asunto
+                    subject_header = decode_header(msg["Subject"])[0]
+                    subject = subject_header[0]
+                    if isinstance(subject, bytes):
+                        subject = subject.decode(subject_header[1] or 'utf-8')
+                    
+                    # Filtrar solo correos de Netflix
+                    netflix_keywords = ['netflix', 'codigo', 'hogar', 'inicio de sesion']
+                    if not any(kw in subject.lower() for kw in netflix_keywords):
+                        continue
+                    
+                    # Obtener fecha
+                    date_str = msg["Date"]
+                    try:
+                        date_obj = parsedate_to_datetime(date_str)
+                        date_peru = date_obj - timedelta(hours=5)
+                        minutes_ago = (now - date_peru.replace(tzinfo=None)).total_seconds() / 60
+                        if minutes_ago > 15:
+                            continue
+                        formatted_date = date_peru.strftime("%d/%m/%Y %H:%M")
+                    except:
+                        formatted_date = date_str
+                    
+                    # Obtener contenido
+                    content = self.get_content(msg)
+                    
+                    # Extraer codigo de 4 digitos
+                    code = None
+                    code_match = re.search(r'\b(\d{4})\b', content)
+                    if code_match:
+                        code = code_match.group(1)
+                    
+                    # Extraer link
+                    link = None
+                    link_match = re.search(r'(https://www\.netflix\.com/[^\s<>"]+)', content)
+                    if link_match:
+                        link = link_match.group(1)
+                    
+                    codes_list.append({
+                        'subject': subject,
+                        'to': msg.get("To", ""),
+                        'date': formatted_date,
+                        'code': code,
+                        'link': link
+                    })
+                except:
+                    continue
+            
+            mail.logout()
+            
+            # Enviar respuesta
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response = {
+                'success': True,
+                'codes': codes_list,
+                'count': len(codes_list),
+                'userEmail': user_email
+            }
+            
+            self.wfile.write(json.dumps(response).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            error_response = {
+                'success': False,
+                'error': str(e),
+                'codes': [],
+                'count': 0
+            }
+            
+            self.wfile.write(json.dumps(error_response).encode())
+    
+    def get_content(self, msg):
+        if msg.is_multipart():
+            for part in msg.walk():
+                if part.get_content_type() == "text/plain":
+                    try:
+                        return part.get_payload(decode=True).decode()
+                    except:
+                        pass
+        else:
+            try:
+                return msg.get_payload(decode=True).decode()
+            except:
+                pass
+        return ""
