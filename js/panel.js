@@ -1,78 +1,30 @@
-﻿// Panel JavaScript - Lógica Simplificada
+﻿const API_URL = '/api/check_emails';
 
-// Tutorial Device Selection
-document.querySelectorAll('.device-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const device = this.dataset.device;
-        
-        document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        
-        document.querySelectorAll('.tutorial-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        
-        const tutorialContent = document.getElementById(`tutorial-${device}`);
-        if (tutorialContent) {
-            tutorialContent.classList.add('active');
-            setTimeout(() => {
-                tutorialContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
-        }
-    });
-});
+// Mostrar email del usuario
+const emailDisplay = document.getElementById('emailDisplay');
+const userEmail = sessionStorage.getItem('userEmail');
+if (emailDisplay && userEmail) emailDisplay.textContent = userEmail;
 
-// Start verification - Oculta tutorial, muestra panel
-function startVerification() {
-    document.getElementById('tutorialSection').style.display = 'none';
-    document.getElementById('panelSection').style.display = 'block';
+// Switch entre tabs
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     
-    setTimeout(() => {
-        document.getElementById('panelSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-    
-    // Auto-verificar
-    setTimeout(() => {
-        checkEmails();
-    }, 500);
+    if (tab === 'rapido') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('modo-rapido').classList.add('active');
+    } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('modo-guiado').classList.add('active');
+    }
 }
 
-// Back to tutorial
-function backToTutorial() {
-    document.getElementById('panelSection').style.display = 'none';
-    document.getElementById('tutorialSection').style.display = 'block';
-    
-    setTimeout(() => {
-        document.getElementById('tutorialSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-    
-    stopAutoRefresh();
-    hideAll();
-}
-
-// Email checking functionality
-const API_URL = '/api/check_emails';
-let autoRefreshInterval;
-
-const checkBtn = document.getElementById('checkBtn');
-const refreshBtn = document.getElementById('refreshBtn');
-const retryBtn = document.getElementById('retryBtn');
-const loading = document.getElementById('loading');
-const resultsContainer = document.getElementById('resultsContainer');
-const noResults = document.getElementById('noResults');
-const errorContainer = document.getElementById('errorContainer');
-const emailsList = document.getElementById('emailsList');
-const emailCount = document.getElementById('emailCount');
-const lastCheck = document.getElementById('lastCheck');
-const errorMessage = document.getElementById('errorMessage');
-
+// Buscar códigos
 async function checkEmails() {
     showLoading();
-    
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
-        
         updateLastCheck();
         
         if (data.error) {
@@ -86,145 +38,91 @@ async function checkEmails() {
         }
         
         showResults(data.emails, data.count);
-        startAutoRefresh();
-        
     } catch (error) {
-        console.error('Error:', error);
-        showError('No se pudo conectar al servidor. Intenta nuevamente.');
+        showError('No se pudo conectar al servidor');
     }
 }
 
 function showLoading() {
     hideAll();
-    loading.style.display = 'block';
+    document.getElementById('loading').style.display = 'block';
 }
 
 function showResults(emails, count) {
     hideAll();
+    document.getElementById('count').textContent = count;
+    const codesList = document.getElementById('codesList');
+    codesList.innerHTML = '';
     
-    emailCount.textContent = count;
-    emailsList.innerHTML = '';
-    
-    emails.forEach((email, index) => {
-        const emailCard = createEmailCard(email, index);
-        emailsList.appendChild(emailCard);
+    emails.forEach(email => {
+        const card = document.createElement('div');
+        card.className = 'code-card';
+        let html = `<h3>${email.subject}</h3><p>${email.time}</p>`;
+        
+        if (email.code) {
+            html += `<div class="code">${email.code}</div>`;
+        }
+        if (email.link) {
+            html += `<a href="${email.link}" target="_blank" class="link">Abrir Link</a>`;
+        }
+        
+        card.innerHTML = html;
+        codesList.appendChild(card);
     });
     
-    resultsContainer.style.display = 'block';
-}
-
-function createEmailCard(email, index) {
-    const card = document.createElement('div');
-    card.className = 'email-card';
-    card.style.animation = `slideIn 0.4s ease ${index * 0.1}s both`;
-    
-    const date = formatDate(email.date);
-    
-    card.innerHTML = `
-        <div class="email-header">
-            <div class="email-info">
-                <div class="email-subject">📌 ${email.subject || 'Nuevo correo de Netflix'}</div>
-            </div>
-            ${email.has_link ? '<span class="email-badge">✅ Enlace activo</span>' : ''}
-        </div>
-        <div class="email-meta">
-            <span>📧 "${email.to}"</span>
-            <span>📅 ${date}</span>
-        </div>
-        ${email.has_link ? `
-            <p style="color: #b3b3b3; font-size: 0.9rem; margin: 0.75rem 0;">
-                👉 Verifica tu acceso con el siguiente link 👇
-            </p>
-            <a href="${email.link}" target="_blank" class="email-link">
-                🔗 Verificar Acceso Netflix
-            </a>
-            <p style="color: #e50914; font-size: 0.85rem; margin-top: 0.75rem; font-weight: 600;">
-                ⚠️ Importante: Este enlace vence en 15 minutos
-            </p>
-        ` : '<p style="color: #999;">⚠️ Este correo no contiene enlace de verificación</p>'}
-    `;
-    
-    return card;
-}
-
-function formatDate(dateString) {
-    if (typeof dateString === 'string' && dateString.includes('/')) {
-        return dateString + ' 🇵🇪';
-    }
-    
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${day}/${month}/${year} ${hours}:${minutes} 🇵🇪`;
+    document.getElementById('results').style.display = 'block';
 }
 
 function showNoResults() {
     hideAll();
-    noResults.style.display = 'block';
+    document.getElementById('noResults').style.display = 'block';
 }
 
-function showError(message) {
+function showError(msg) {
     hideAll();
-    errorMessage.textContent = message;
-    errorContainer.style.display = 'block';
-    stopAutoRefresh();
+    document.getElementById('errorMsg').textContent = msg;
+    document.getElementById('error').style.display = 'block';
 }
 
 function hideAll() {
-    loading.style.display = 'none';
-    resultsContainer.style.display = 'none';
-    noResults.style.display = 'none';
-    errorContainer.style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('noResults').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
 }
 
 function updateLastCheck() {
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    lastCheck.textContent = `${hours}:${minutes}:${seconds}`;
+    const time = now.toLocaleTimeString('es-PE', {hour: '2-digit', minute: '2-digit'});
+    document.getElementById('lastCheck').textContent = time;
 }
 
-function startAutoRefresh() {
-    stopAutoRefresh();
-    autoRefreshInterval = setInterval(() => {
-        checkEmails();
-    }, 30000);
+function cancelSearch() {
+    hideAll();
 }
 
-function stopAutoRefresh() {
-    if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-    }
-}
-
-checkBtn.addEventListener('click', checkEmails);
-refreshBtn.addEventListener('click', checkEmails);
-retryBtn.addEventListener('click', checkEmails);
-
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        stopAutoRefresh();
+function showTutorial(device) {
+    const content = document.getElementById('tutorial-content');
+    const title = document.getElementById('tutorial-title');
+    const steps = document.getElementById('tutorial-steps');
+    
+    if (device === 'tv') {
+        title.textContent = ' Tutorial para TV';
+        steps.innerHTML = '<ol><li>En tu TV, abre Netflix</li><li>Selecciona "Estoy de Viaje"</li><li>Elige "Enviar email"</li><li>Luego verifica aquí</li></ol>';
     } else {
-        if (resultsContainer.style.display === 'block') {
-            startAutoRefresh();
-        }
+        title.textContent = ' Tutorial para Móvil';
+        steps.innerHTML = '<ol><li>Abre Netflix en tu celular</li><li>Si pide verificación, elige email</li><li>Luego verifica aquí</li></ol>';
     }
-});
+    
+    content.style.display = 'block';
+}
 
-console.log('🎬 FyisBot Panel Netflix v2.0 - Lógica Simplificada');
+// Event listeners
+document.getElementById('checkBtn').addEventListener('click', checkEmails);
+document.getElementById('retryBtn').addEventListener('click', checkEmails);
+document.getElementById('retryBtn2').addEventListener('click', checkEmails);
 
-// Auto-iniciar Modo Rapido al cargar
+// Auto-inicio
 window.addEventListener('DOMContentLoaded', function() {
-    // Simular click en boton Actualizar para iniciar busqueda
-    setTimeout(() => {
-        const checkBtn = document.getElementById('checkBtn');
-        if (checkBtn) {
-            checkBtn.click();
-        }
-    }, 300);
+    setTimeout(() => checkEmails(), 300);
 });
