@@ -147,12 +147,14 @@ def extract_link(text):
     
     return None
 
-def handler(event, context):
-    """Handler principal para Vercel"""
+def handler(request):
+    """Handler principal para Vercel - Compatible con Web Standard API"""
     try:
-        # Obtener parámetros
-        params = event.get('queryStringParameters', {})
-        user_email = params.get('email', '')
+        # Obtener parámetros de la URL
+        from urllib.parse import urlparse, parse_qs
+        url_parts = urlparse(request.url) if hasattr(request, 'url') else None
+        params = parse_qs(url_parts.query) if url_parts else {}
+        user_email = params.get('email', [''])[0] if params else ''
         
         # Conectar al servidor de correo
         mail = connect_to_mail()
@@ -163,32 +165,22 @@ def handler(event, context):
         # Cerrar conexión
         mail.logout()
         
-        # Retornar respuesta
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            },
-            'body': json.dumps({
-                'success': True,
-                'codes': emails,
-                'count': len(emails),
-                'userEmail': user_email
-            })
+        # Retornar respuesta JSON
+        from http.server import BaseHTTPRequestHandler
+        import json
+        
+        response_data = {
+            'success': True,
+            'codes': emails,
+            'count': len(emails),
+            'userEmail': user_email
         }
+        
+        return json.dumps(response_data)
     
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({
-                'success': False,
-                'error': str(e)
-            })
-        }
+        import json
+        return json.dumps({
+            'success': False,
+            'error': str(e)
+        })
