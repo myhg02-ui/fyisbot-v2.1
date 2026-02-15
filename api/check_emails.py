@@ -1,3 +1,4 @@
+from http.server import BaseHTTPRequestHandler
 import json
 import imaplib
 import email
@@ -5,49 +6,153 @@ from email.header import decode_header
 from email.utils import parsedate_to_datetime
 from datetime import timedelta, datetime
 import re
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
-# Configuración del correo Yandex
+# Configuracion del correo Yandex
 YANDEX_USER = 'netflixmyhg@yandex.com'
 YANDEX_APP_PASSWORD = 'dccvunwyiszhvvim'
 IMAP_SERVER = 'imap.yandex.com'
 IMAP_PORT = 993
 
 # Filtros de correos de Netflix
-FILTER_SENDER = 'info@account.netflix.com'
 FILTER_SUBJECTS = [
-    'Importante: Cómo actualizar tu Hogar con Netflix',
-    'Tu código de acceso temporal de Netflix',
-    'Importante: Cómo cambiar tu hogar Netflix',
-    'Netflix: Tu código de inicio de sesión'
+    'Importante: Como actualizar tu Hogar con Netflix',
+    'Tu codigo de acceso temporal de Netflix',
+    'Importante: Como cambiar tu hogar Netflix',
+    'Netflix: Tu codigo de inicio de sesion'
 ]
 
-def connect_to_mail():
-    """Conectar al servidor IMAP de Yandex"""
-    try:
-        mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
-        mail.login(YANDEX_USER, YANDEX_APP_PASSWORD)
-        return mail
-    except Exception as e:
-        raise Exception(f"Error al conectar al servidor de correo: {str(e)}")
-
-def get_recent_emails(mail, minutes=15):
-    """Obtener correos recientes de Netflix"""
-    mail.select("inbox")
-    
-    # Buscar todos los correos
-    status, messages = mail.search(None, 'ALL')
-    email_ids = messages[0].split()
-    
-    # Obtener los últimos correos
-    last_emails_ids = email_ids[-10:] if len(email_ids) >= 10 else email_ids
-    
-    emails = []
-    now = datetime.now()
-    
-    for email_id in reversed(last_emails_ids):
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
         try:
-            status, msg_data = mail.fetch(email_id, "(RFC822)")
+            # Parse query parameters
+            parsed_path = urlparse(self.path)
+            params = parse_qs(parsed_path.query)
+            user_email = params.get('email', [''])[0]
+            
+            # Connect to mail
+            mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+            mail.login(YANDEX_USER, YANDEX_APP_PASSWORD)
+            mail.select("inbox")
+            
+            # Get recent emails
+            status, messages = mail.search(None, 'ALL')
+            email_ids = messages[0].split()
+            last_emails_ids = email_ids[-10:] if len(email_ids) >= 10 else email_ids
+            
+            emails = []
+            now = datetime.now()
+            
+            for email_id in reversed(last_emails_ids):
+                try:
+                    status, msg_data = mail.fetch(email_id, "(RFC822)")
+                    msg = email.message_from_bytes(msg_data[0][1])
+                    
+                    # Decode subject
+                    subject, encoding = decode_header(msg["Subject"])[0]
+                    if isinstance(subject, bytes):
+                        subject = subject.decode(encoding if encoding else "utf-8")
+                    
+                    # Filter Netflix emails
+                    if any(filtro.lower() in subject.lower() for filtro in FILTER_SUBJECTS):
+                        date_str = msg["Date"]
+                        try:
+                            date_received = parsedate_to_datetime(date_str)
+                            date_received_peru = date_received - timedelta(hours=5)
+                            time_diff = now - date_received_peru.replace(tzinfo=None)
+                            if time_diff.total_seconds() / 60 > 15:
+                                continue
+                            formatted_date = date_received_peru.strftime("%d/%m/%Y %H:%M")
+                        except:
+                            formatted_date = date_str
+                        
+                        to_address = msg.get("To", "No especificado")
+                        content = self.get_mail_content(msg)
+                        code = self.extract_code(content)
+                        link = self.extract_link(content)
+                        
+                        emails.append({
+                            "subject": subject,
+                            "to": to_address,
+                            "date": formatted_date,
+                            "code": code,
+                            "link": link
+                        })
+                except:
+                    continue
+            
+            mail.logout()
+            
+            # Send response
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            response_data = {
+                'success': True,
+                'codes': emails,
+                'count': len(emails),
+                'userEmail': user_email
+            }
+            
+            self.wfile.write(json.dumps(response_data).encode())
+            
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            
+            error_data = {
+                'success': False,
+                'error': str(e)
+            }
+            
+            self.wfile.write(json.dumps(error_data).encode())
+    
+    def get_mail_content(self, msg):
+        if msg.is_multipart():
+            for part in msg.walk():
+                if part.get_content_type() == "text/plain":
+                    try:
+                        return part.get_payload(decode=True).decode()
+                    except:
+                        return ""
+        else:
+            try:
+                return msg.get_payload(decode=True).decode()
+            except:
+                return ""
+        return ""
+    
+    def extract_code(self, text):
+        patterns = [
+            r'codigo.*?(\d{4})',
+            r'code.*?(\d{4})',
+            r'(?:^|\s)(\d{4})(?:\s|$)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1)
+        return None
+    
+    def extract_link(self, text):
+        patterns = [
+            r'Si, la envie yo.*?(https?://[^\s]+)',
+            r'Obtener codigo.*?(https?://[^\s]+)',
+            r'Solicitar codigo.*?(https?://[^\s]+)',
+            r'Si, lo solicite yo.*?(https?://[^\s]+)',
+            r'(https://www\.netflix\.com/account/[^\s]+)',
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                link = match.group(1)
+                link = link.strip('>,;')
+                return link
+        return None
             msg = email.message_from_bytes(msg_data[0][1])
             
             # Decodificar asunto
