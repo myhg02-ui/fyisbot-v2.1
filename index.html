@@ -3,47 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix - Panel de Codigos</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=''http://www.w3.org/2000/svg'' viewBox=''0 0 100 100''><rect width=''100'' height=''100'' fill=''%23E50914''/><text x=''50'' y=''70'' font-size=''70'' text-anchor=''middle'' fill=''white'' font-family=''Arial Black''>N</text></svg>">
+    <title>FyisBot - Sistema de Códigos Netflix</title>
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23E50914'/><text x='50' y='70' font-size='70' text-anchor='middle' fill='white' font-family='Arial Black'>N</text></svg>"><text y=%27.9em%27 font-size=%2790%27></text></svg>">
 </head>
 <body>
-    <div class="container">
-        <div class="netflix-logo">NETFLIX</div>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav-bar">
+                <a href="/" class="logo">
+                    <img src="assets/images/logo.png" alt="FyisBot" class="logo-img">
+                    <span class="logo-text">FyisBot</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/" class="active">Inicio</a></li>
+                    <li><a href="/panel">Panel Netflix</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-        <div class="main-card">
-            <h1>Panel de Codigos Netflix</h1>
-            <p class="subtitle">Accede a tus codigos de verificacion recientes</p>
-
-            <div class="input-group">
-                <label for="email">Tu correo de Netflix</label>
-                <input
-                    type="email"
-                    id="email"
-                    placeholder="ejemplo@correo.com"
-                    autocomplete="email"
-                >
-                <small>Ingrese el correo donde recibes los codigos de Netflix</small>
-            </div>
-
-            <button class="btn-primary" onclick="goToPanel()">
-                Ver mis codigos
-            </button>
-
-            <div class="info-box">
-                <p><strong>Solo veras codigos de los ultimos 15 minutos</strong></p>
-                <p>Despues de ese tiempo, los codigos expiran automaticamente.</p>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">FyisBot</h1>
+                <p class="hero-subtitle">Obtén tus códigos de Netflix al instante</p>
+                <a href="/panel" class="btn btn-primary"> Ir al Panel Netflix</a>
             </div>
         </div>
+    </section>
 
-        <footer class="footer">
-            <div class="footer-logo"></div>
-            <p>Sistema automatico de codigos Netflix</p>
-            <p>WhatsApp: +51 942 354 613 | Telegram: @Fyis2</p>
-        </footer>
-    </div>
+    <!-- Info Section -->
+    <section id="info" class="info-section">
+        <div class="container">
+            <div class="info-content">
+                <h2> ¿Qué hace FyisBot?</h2>
+                <p>Lee automáticamente los correos de Netflix que llegan a tu bandeja y muestra los códigos de verificación.</p>
+                <div class="features">
+                    <div class="feature"> Automático</div>
+                    <div class="feature"> Seguro</div>
+                    <div class="feature"> Filtrado</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="version-tag">VW3290</div>
-    <script src="js/main.js"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FyisBot</h3>
+                    <p>Sistema automático de códigos Netflix</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Soporte</h3>
+                    <p> WhatsApp: +51 942 354 613</p>
+                    <p> Telegram: @Fyis2</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Importante</h3>
+                    <p> Enlaces vencen en 15 min</p>
+                    <p> Uso autorizado</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FyisBot. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="version-tag">XY4401</div>`n    <script src="js/main.js"></script>
 </body>
 </html>
