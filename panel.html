@@ -3,118 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix - Panel de Codigos</title>
-    <link rel="icon" href="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.ico">
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Panel de Códigos Netflix - FyisBot</title>
+    <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/panel.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23E50914'/><text x='50' y='70' font-size='70' text-anchor='middle' fill='white' font-family='Arial Black'>N</text></svg>">
 </head>
 <body>
-    <div class="panel-container">
-        <header class="panel-header">
-            <div class="header-content">
-                <div class="netflix-logo">NETFLIX</div>
-                <div class="header-info">
-                    <h1>Panel de Códigos</h1>
-                    <p class="email-display" id="userEmail"></p>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav-bar">
+                <a href="/" class="logo">
+                    <img src="assets/images/logo.png" alt="FyisBot" class="logo-img">
+                    <span class="logo-text">FyisBot</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="/">Inicio</a></li>
+                    <li><a href="/panel" class="active">Panel Netflix</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-panel">
+        <div class="container">
+            <h1>📧 Códigos Netflix</h1>
+            <p>Obtén tus códigos de verificación rápidamente</p>
+        </div>
+    </section>
+
+    <!-- Tutorial Section -->
+    <section class="tutorial-section" id="tutorialSection">
+        <div class="container">
+            <div class="tutorial-selector">
+                <h2>📖 ¿Cómo funciona?</h2>
+                <p>Primero, selecciona tu dispositivo para ver las instrucciones</p>
+                
+                <div class="device-buttons">
+                    <div class="device-btn" data-device="tv">
+                        <span class="device-icon">📺</span>
+                        <h3>TV</h3>
+                        <p>Smart TV, Chromecast, Fire TV</p>
+                    </div>
+                    <div class="device-btn" data-device="mobile">
+                        <span class="device-icon">📱</span>
+                        <h3>Móvil</h3>
+                        <p>Celular, Tablet, PC</p>
+                    </div>
                 </div>
             </div>
-            <button class="btn-reset" onclick="resetPanel()">
-                🔄 Reiniciar
-            </button>
-        </header>
-        
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('rapido')" id="tab-rapido">
-                🚀 Modo Rápido
-            </button>
-            <button class="tab-btn" onclick="switchTab('guiado')" id="tab-guiado">
-                📖 Modo Guiado
-            </button>
+
+            <!-- Tutorial TV -->
+            <div class="tutorial-content" id="tutorial-tv">
+                <h3>📺 Instrucciones para TV</h3>
+                
+                <img src="assets/images/tutorial/netflix-error-tv.png" alt="Error Netflix TV" class="tutorial-image">
+                
+                <div class="tutorial-steps">
+                    <div class="tutorial-step">
+                        <h4>1️⃣ Verás esta pantalla en tu TV</h4>
+                        <p>Netflix te mostrará opciones de verificación</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h4>2️⃣ Selecciona "Estoy de Viaje" o "Actualizar hogar"</h4>
+                        <p>Recomendamos "Estoy de Viaje" para uso temporal</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h4>3️⃣ Elige "Enviar email"</h4>
+                        <p>Netflix enviará el código a tu correo registrado</p>
+                    </div>
+                </div>
+
+                <div class="tutorial-ready">
+                    <p>✅ ¿Ya enviaste el email? Ahora verifica tu correo aquí:</p>
+                    <button class="btn-verify-now" onclick="startVerification()">
+                        📬 Verificar Correos Ahora
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tutorial Mobile -->
+            <div class="tutorial-content" id="tutorial-mobile">
+                <h3>📱 Instrucciones para Móvil</h3>
+                
+                <img src="assets/images/tutorial/netflix-error-mobile.png" alt="Error Netflix Mobile" class="tutorial-image tutorial-image-small">
+                
+                <div class="tutorial-steps">
+                    <div class="tutorial-step">
+                        <h4>1️⃣ Verás esta pantalla en tu dispositivo</h4>
+                        <p>Netflix te pedirá verificar tu ubicación</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h4>2️⃣ Presiona "Ver Temporalmente"</h4>
+                        <p>O selecciona "Actualizar hogar" si prefieres</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <h4>3️⃣ Selecciona "Enviar email"</h4>
+                        <p>Recibirás el código de verificación por correo</p>
+                    </div>
+                </div>
+
+                <div class="tutorial-ready">
+                    <p>✅ ¿Ya enviaste el email? Ahora verifica tu correo aquí:</p>
+                    <button class="btn-verify-now" onclick="startVerification()">
+                        📬 Verificar Correos Ahora
+                    </button>
+                </div>
+            </div>
         </div>
-        
-        <!-- MODO RÁPIDO -->
-        <div class="tab-content active" id="content-rapido">
-            <div class="quick-mode">
-                <button class="btn-primary" onclick="fetchCodes()">
-                    🔍 Actualizar códigos
+    </section>
+
+    <!-- Panel de Control -->
+    <section class="panel-section" id="panelSection" style="display: none;">
+        <div class="container">
+            <!-- Botón de verificación -->
+            <div class="check-section">
+                <button id="checkBtn" class="btn-check">
+                    <span class="btn-icon">📬</span>
+                    <span class="btn-text">Verificar Correos</span>
                 </button>
-                
-                <div class="last-update" id="lastUpdate">
-                    Última actualización: --:--
+                <p class="last-check">Última verificación: <span id="lastCheck">Nunca</span></p>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading-container" style="display: none;">
+                <div class="spinner"></div>
+                <p>Verificando correos de Netflix...</p>
+            </div>
+
+            <!-- Resultados -->
+            <div id="resultsContainer" class="results-container" style="display: none;">
+                <div class="results-header">
+                    <h2>📨 Correos Encontrados: <span id="emailCount">0</span></h2>
+                    <button id="refreshBtn" class="btn-refresh">🔄 Actualizar</button>
                 </div>
-                
-                <div id="loadingSpinner" class="loading-container" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Buscando tus códigos...</p>
-                    <div class="timer" id="timer">10s</div>
-                    <button class="btn-secondary" onclick="cancelFetch()">Cancelar</button>
-                </div>
-                
-                <div id="codesContainer" class="codes-container">
-                    <!-- Los códigos se cargarán aquí dinámicamente -->
-                </div>
+                <div id="emailsList" class="emails-list"></div>
+            </div>
+
+            <!-- Sin resultados -->
+            <div id="noResults" class="no-results" style="display: none;">
+                <div class="no-results-icon">📭</div>
+                <h3>Sin correos nuevos</h3>
+                <p>Solicita el código en Netflix primero</p>
+                <p class="hint">⏱ Espera 10 segundos e intenta de nuevo</p>
+            </div>
+
+            <!-- Error -->
+            <div id="errorContainer" class="error-container" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3>Error al conectar</h3>
+                <p id="errorMessage">No se pudo conectar al servidor</p>
+                <button id="retryBtn" class="btn-retry">🔄 Reintentar</button>
+            </div>
+
+            <!-- Botón volver -->
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn-back" onclick="backToTutorial()">
+                    ⬅️ Volver al Tutorial
+                </button>
             </div>
         </div>
-        
-        <!-- MODO GUIADO -->
-        <div class="tab-content" id="content-guiado">
-            <div class="guided-mode">
-                <div class="guided-header">
-                    <h2>❓ ¿Qué mensaje ves en tu TV o dispositivo?</h2>
-                    <p>Selecciona el problema que tienes para ver la solución paso a paso</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FyisBot</h3>
+                    <p>Sistema automático de códigos Netflix</p>
                 </div>
-                
-                <div class="options-container">
-                    <div class="option-card" onclick="showGuidedStep('codigo-email')">
-                        <div class="option-icon">📺</div>
-                        <div class="option-content">
-                            <h3>"Ingresa el código que enviamos a tu email"</h3>
-                            <p>Pantalla con 4 cajas para escribir código</p>
-                        </div>
-                        <div class="option-arrow">→</div>
-                    </div>
-                    
-                    <div class="option-card" onclick="showGuidedStep('tv-hogar')">
-                        <div class="option-icon">🏠</div>
-                        <div class="option-content">
-                            <h3>"Tu televisor no forma parte del hogar Netflix"</h3>
-                            <p>Mensaje sobre actualizar el hogar</p>
-                        </div>
-                        <div class="option-arrow">→</div>
-                    </div>
-                    
-                    <div class="option-card" onclick="showGuidedStep('dispositivo-hogar')">
-                        <div class="option-icon">📱</div>
-                        <div class="option-content">
-                            <h3>"Tu dispositivo no forma parte del Hogar con Netflix"</h3>
-                            <p>Opción para ver temporalmente</p>
-                        </div>
-                        <div class="option-arrow">→</div>
-                    </div>
-                    
-                    <div class="option-card" onclick="showGuidedStep('sin-mensaje')">
-                        <div class="option-icon">❌</div>
-                        <div class="option-content">
-                            <h3>No veo ningún mensaje específico</h3>
-                            <p>Ayuda general</p>
-                        </div>
-                        <div class="option-arrow">→</div>
-                    </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <p>📱 WhatsApp: +51 942 354 613</p>
+                    <p>💬 Telegram: @Fyis2</p>
                 </div>
-                
-                <!-- Pasos guiados (se mostrarán dinámicamente) -->
-                <div id="guidedSteps" class="guided-steps" style="display: none;">
-                    <!-- Contenido dinámico -->
+                <div class="footer-section">
+                    <h3>Importante</h3>
+                    <p>⏱ Los enlaces vencen en 15 minutos</p>
+                    <p>✅ Uso exclusivo autorizado</p>
                 </div>
             </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FyisBot. Todos los derechos reservados.</p>
+            </div>
         </div>
-        
-        <footer>
-            <p>FyisBot v2.0 | WhatsApp: +51 942 354 613 | Telegram: @Fyis2</p>
-        </footer>
-    </div>
-    
-    <div class="version-tag">KM4301</div>
+    </footer>
+
+    <div class="version-tag">LN5412</div>
+
     <script src="js/panel.js"></script>
 </body>
 </html>
