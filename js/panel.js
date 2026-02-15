@@ -1,4 +1,4 @@
-// Panel JavaScript - Lógica Simplificada
+﻿// Panel JavaScript - Lógica Simplificada
 
 // Tutorial Device Selection
 document.querySelectorAll('.device-btn').forEach(btn => {
@@ -217,3 +217,14 @@ document.addEventListener('visibilitychange', () => {
 });
 
 console.log('🎬 FyisBot Panel Netflix v2.0 - Lógica Simplificada');
+
+// Auto-iniciar Modo Rapido al cargar
+window.addEventListener('DOMContentLoaded', function() {
+    // Simular click en boton Actualizar para iniciar busqueda
+    setTimeout(() => {
+        const checkBtn = document.getElementById('checkBtn');
+        if (checkBtn) {
+            checkBtn.click();
+        }
+    }, 300);
+});
