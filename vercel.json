@@ -1,4 +1,10 @@
 ﻿{
+  "github": {
+    "enabled": true,
+    "autoAlias": true,
+    "silent": false,
+    "autoJobCancelation": true
+  },
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
