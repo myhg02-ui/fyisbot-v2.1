@@ -3,51 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verificación de cuenta - Netflix</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23E50914'/><text x='50' y='70' font-size='70' text-anchor='middle' fill='white' font-family='Arial Black'>N</text></svg>">
+    <title>Netflix - Verificación</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23E50914' width='100' height='100'/><text x='50' y='75' text-anchor='middle' fill='white' font-family='Arial Black' font-size='80' font-weight='bold'>N</text></svg>">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div class="background"></div>
     <div class="container">
-        <div class="logo">
-            <svg viewBox="0 0 111 30" aria-hidden="true">
-                <g fill="#E50914">
-                    <path d="M105.06 14.27L111 30c-1.75-.25-3.5-.5-5.26-.74l-2.74-9.99-2.75 9.26c-1.75-.25-3.5-.5-5.25-.74l5.51-15.38-4.93-13.47c1.75.25 3.5.5 5.25.74l2.25 9.01 2.25-9.01c1.75.25 3.5.5 5.25.74l-4.93 13.47z"/>
-                    <path d="M90.84 6.03v23.97c-1.5 0-3 0-4.5-.01V6.03h4.5z"/>
-                    <path d="M81.09 0c1.75.25 3.5.5 5.25.74v4.5c-1.75-.25-3.5-.5-5.25-.74V0z"/>
-                    <path d="M71.59 6.03c1.75.25 3.5.5 5.25.74v16.48l-5.25-.74V6.03z"/>
-                    <path d="M52.98 2.02l5.26.74v26.48l-5.26-.74V2.02z"/>
-                    <path d="M43.23 4.02l5.25.74v22.48l-5.25-.74V4.02z"/>
-                    <path d="M24.37 6.03l5.25.74v18.48l-5.25-.74V6.03z"/>
-                    <path d="M10.62 30c-1.75-.25-3.5-.5-5.25-.74l5.51-15.38L6 .41c1.75.25 3.5.5 5.25.74L13.5 10.16 15.75 1.15c1.75.25 3.5.5 5.25.74L16.07 15.36 21 30c-1.75-.25-3.5-.5-5.26-.74l-2.74-9.99L10.25 28.53c-1.75-.25-3.5-.5-5.25-.74z"/>
-                </g>
-            </svg>
-        </div>
+        <svg viewBox="0 0 111 30" class="logo">
+            <g fill="#E50914">
+                <path d="M105.06 14.27L111 30c-1.75-.25-3.5-.5-5.26-.74l-2.74-9.99-2.75 9.26c-1.75-.25-3.5-.5-5.25-.74l5.51-15.38-4.93-13.47c1.75.25 3.5.5 5.25.74l2.25 9.01 2.25-9.01c1.75.25 3.5.5 5.25.74l-4.93 13.47z"/>
+                <path d="M90.84 6.03v23.97c-1.5 0-3 0-4.5-.01V6.03h4.5z"/>
+                <path d="M81.09 0c1.75.25 3.5.5 5.25.74v4.5c-1.75-.25-3.5-.5-5.25-.74V0z"/>
+                <path d="M71.59 6.03c1.75.25 3.5.5 5.25.74v16.48l-5.25-.74V6.03z"/>
+                <path d="M52.98 2.02l5.26.74v26.48l-5.26-.74V2.02z"/>
+                <path d="M43.23 4.02l5.25.74v22.48l-5.25-.74V4.02z"/>
+                <path d="M24.37 6.03l5.25.74v18.48l-5.25-.74V6.03z"/>
+                <path d="M10.62 30c-1.75-.25-3.5-.5-5.25-.74l5.51-15.38L6 .41c1.75.25 3.5.5 5.25.74L13.5 10.16 15.75 1.15c1.75.25 3.5.5 5.25.74L16.07 15.36 21 30c-1.75-.25-3.5-.5-5.26-.74l-2.74-9.99L10.25 28.53c-1.75-.25-3.5-.5-5.25-.74z"/>
+            </g>
+        </svg>
 
-        <div class="form-container">
-            <h1>Verificación de cuenta</h1>
-            <p class="subtitle">Ingresa tu correo para acceder a tus códigos de verificación</p>
+        <div class="card">
+            <h1>Códigos de Verificación</h1>
+            <p>Ingresa tu correo de Netflix para obtener códigos de verificación</p>
             
-            <div class="form-group">
-                <input type="email" id="email" placeholder="Correo electrónico" autocomplete="email" required>
+            <div class="input-group">
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="correo@ejemplo.com"
+                    autocomplete="email"
+                >
             </div>
 
-            <button class="btn-primary" onclick="goToPanel()">Continuar</button>
-
-            <div class="info-text">
-                <p>Solo verás códigos recientes de los últimos 15 minutos</p>
-            </div>
+            <button onclick="goToPanel()" class="btn-primary">
+                Continuar
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                </svg>
+            </button>
         </div>
-
-        <footer class="footer">
-            <p>Sistema automático de códigos</p>
-            <div class="contact-links">
-                <a href="https://wa.me/51942354613" target="_blank">WhatsApp</a>
-                <a href="https://t.me/Fyis2" target="_blank">Telegram</a>
-            </div>
-        </footer>
     </div>
+
+    <div style="position:fixed;bottom:5px;right:5px;background:rgba(0,0,0,0.8);color:#0f0;padding:3px 8px;border-radius:3px;font-size:10px;font-family:monospace;pointer-events:none;z-index:9999;">v2.1.2-FEB15-14:32</div>
     <script src="js/main.js"></script>
 </body>
 </html>
