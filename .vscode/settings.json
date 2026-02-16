@@ -1,0 +1,11 @@
+﻿{
+  "git.confirmSync": false,
+  "git.autofetch": true,
+  "git.enableSmartCommit": true,
+  "git.confirmEmptyCommits": false,
+  "git.confirmNoVerify": false,
+  "git.postCommitCommand": "push",
+  "git.showPushSuccessNotification": true,
+  "git.allowForcePush": true,
+  "git.confirmForcePush": false
+}
