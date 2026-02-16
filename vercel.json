@@ -1,5 +1,4 @@
 ﻿{
-  "rewrites": [
-    { "source": "/panel", "destination": "/panel.html" }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
