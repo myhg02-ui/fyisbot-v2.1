@@ -15,11 +15,21 @@ IMAP_SERVER = 'imap.yandex.com'
 IMAP_PORT = 993
 
 # Asuntos exactos de Netflix a filtrar
+# Optimización v2.1.6-ultra
+MAX_EMAILS_PROCESS = 10  # Procesar máximo 10 emails
+MAX_AGE_MINUTES = 15     # Emails de últimos 15 minutos
+MAX_RESULTS = 3          # Máximo 3 resultados
+
+# Asuntos de Netflix a filtrar (7 patrones + crítico)
 FILTER_SUBJECTS = [
     'Importante: Como actualizar tu Hogar con Netflix',
     'Tu codigo de acceso temporal de Netflix',
     'Importante: Como cambiar tu hogar Netflix',
-    'Netflix: Tu codigo de inicio de sesion'
+    'Netflix: Tu codigo de inicio de sesion',
+    'codigo de inicio',
+    'codigo para iniciar sesion',
+    'iniciar sesion',
+    'Tu código de inicio de sesión'  # CRÍTICO
 ]
 
 class handler(BaseHTTPRequestHandler):
@@ -64,7 +74,7 @@ class handler(BaseHTTPRequestHandler):
                         date_obj = parsedate_to_datetime(date_str)
                         date_peru = date_obj - timedelta(hours=5)
                         minutes_ago = (now - date_peru.replace(tzinfo=None)).total_seconds() / 60
-                        if minutes_ago > 15:
+                        if minutes_ago > MAX_AGE_MINUTES:
                             continue
                         formatted_date = date_peru.strftime("%d/%m/%Y %H:%M")
                     except:
@@ -101,7 +111,10 @@ class handler(BaseHTTPRequestHandler):
                 'success': True,
                 'codes': codes_list,
                 'count': len(codes_list),
-                'userEmail': user_email
+                'userEmail': user_email,
+                'version': 'v2.1.6-ultra-optimized',
+                'processed': processed,
+                'max_age_minutes': MAX_AGE_MINUTES
             }
             
             self.wfile.write(json.dumps(response).encode())
@@ -137,10 +150,12 @@ class handler(BaseHTTPRequestHandler):
         return ""
     
     def extract_code(self, text):
-        """Extraer codigo de 4 digitos - Patrones del bot original"""
+        """Extraer codigo de 4 digitos - Patrones mejorados"""
         patterns = [
             r'codigo.*?(\d{4})',
             r'code.*?(\d{4})',
+            r'inicio de sesion.*?(\d{4})',  # CRÍTICO
+            r'iniciar sesion.*?(\d{4})',
             r'(?:^|\s)(\d{4})(?:\s|$)',
         ]
         
