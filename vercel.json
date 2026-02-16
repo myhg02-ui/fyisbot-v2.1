@@ -1,4 +1,10 @@
 ﻿{
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/**/*.py": {
+      "runtime": "python3.9",
+      "maxDuration": 30
+    }
+  }
 }

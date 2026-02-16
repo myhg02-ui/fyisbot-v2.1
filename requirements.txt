@@ -1,1 +1,4 @@
-python-dateutil
+﻿# Python 3.9+ (Vercel default)
+# Built-in modules used: imaplib, email, json, re, datetime, urllib
+# No external dependencies needed for basic functionality
+python-dateutil>=2.8.2
