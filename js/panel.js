@@ -48,9 +48,9 @@ function showResults(emails, count) {
     emails.forEach(email => {
         const card = document.createElement('div');
         card.className = 'code-card';
-        let html = " + "<div class="code-card-header"><h3>"+email.subject+"</h3><span class="code-time">"+email.time+"</span></div>" + ";
-        if (email.code) html += " + "<div class="code" onclick="copyCode(this)" title="Click para copiar">"+email.code+"</div>" + ";
-        if (email.link) html += " + "<a href="+email.link+" target="_blank" class="code-link">Abrir enlace verificación</a>" + ";
+        let html = `<div class="code-card-header"><h3>${email.subject}</h3><span class="code-time">${email.time}</span></div>`;
+        if (email.code) html += `<div class="code" onclick="copyCode(this)" title="Click para copiar">${email.code}</div>`;
+        if (email.link) html += `<a href="${email.link}" target="_blank" class="code-link">Abrir enlace verificación</a>`;
         card.innerHTML = html;
         codesList.appendChild(card);
     });
@@ -154,18 +154,18 @@ function showGuide(type) {
     };
 
     const guide = guides[type];
-    let html = " + "<h2>"+guide.title+"</h2>" + ";
+    let html = `<h2>${guide.title}</h2>`;
     guide.steps.forEach(step => {
         const finalClass = step.final ? ' final' : '';
-        html += " + "
-        <div class="guide-step"+finalClass+">
-            <div class="step-number">"+step.num+"</div>
+        html += `
+        <div class="guide-step${finalClass}">
+            <div class="step-number">${step.num}</div>
             <div class="step-content">
-                <h3>"+step.title+"</h3>
-                <p>"+step.desc+"</p>
+                <h3>${step.title}</h3>
+                <p>${step.desc}</p>
             </div>
         </div>
-        " + ";
+        `;
     });
 
     steps.innerHTML = html;
