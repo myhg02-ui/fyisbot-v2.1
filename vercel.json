@@ -1,23 +1,12 @@
 ﻿{
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/check_emails.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/check_emails",
-      "dest": "/api/check_emails.py"
+      "source": "/api/check_emails",
+      "destination": "/api/check_emails.py"
     },
     {
-      "src": "/panel",
-      "dest": "/panel.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/panel",
+      "destination": "/panel.html"
     }
   ]
 }
